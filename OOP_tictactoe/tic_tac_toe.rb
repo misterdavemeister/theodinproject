@@ -37,7 +37,6 @@ class Game
       elsif selection.match(/2|t|T/)
         game = Game.coin(2)
       elsif selection.match(/3|q|Q/)
-        puts "GOODBYE!"
         Game.game_over = true
       else
         approved = false
@@ -65,11 +64,20 @@ class Game
   end
   
   def play_round
-    display_board
-    display_menu
-    puts "Playing round"
-    gets
-    Game.game_over = true
+    (1..2).each do |turn|
+      if self.player.turn == turn
+        puts "Your turn, playing as \"#{self.player.piece}\"s\n\n"
+        display_board
+        display_menu
+        return if Game.game_over? 
+        Game.clear
+      else
+        puts "Computer played as \"#{self.ai.piece}\"s\n\n"
+        display_board
+        print "(press enter)"
+        gets
+      end
+    end
   end
   
   def winner?
@@ -102,7 +110,7 @@ class Game
   
   ##### VIEW ##### 
   def display_board
-    puts "Playing as '#{self.player.piece}'s\n\n"
+    return if Game.game_over?
     @board.each_with_index do |piece, idx|
       if (idx + 1) % 3 != 0
         print piece.empty? ? " " : piece
@@ -116,13 +124,30 @@ class Game
   end
   
   def display_menu
-    puts "Choose where to put your piece"
-    print "1. Top Left    | 2.  Top Middle   | 3. Top Right \n"
-    print "4. Middle Left | 5.    Center     | 6. Middle Right \n"
-    print "7. Bottom Left | 8. Bottom Middle | 9. Bottom Right\n"
-    puts
-    print "Selection: "
-    selection = gets.chomp[0]
+    return if Game.game_over?
+    approved = false
+    message = false
+    while !approved 
+      if message
+         Game.clear
+         puts "Selection must be a number 1 - 9 (q/Q to quit)" 
+         display_board
+      end
+      approved = true
+      puts "Choose where to put your piece"
+      print "7. Top Left    | 8.  Top Middle   | 9. Top Right \n"
+      print "4. Middle Left | 5.    Center     | 6. Middle Right \n"
+      print "1. Bottom Left | 2. Bottom Middle | 3. Bottom Right\n"
+      puts
+      print "Selection: "
+      selection = gets.chomp[0]
+      if selection == 'q' || selection == "Q" 
+        Game.game_over = true
+        return
+      end
+      approved = false if !selection.match(/[1-9]/) and message = true
+    end
+    
   end
   
   ##### PLAYER SUBCLASS #####
