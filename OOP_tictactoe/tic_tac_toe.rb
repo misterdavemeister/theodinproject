@@ -123,8 +123,8 @@ class Game
     puts
     print "Selection: "
     selection = gets.chomp[0]
-    
   end
+  
   ##### PLAYER SUBCLASS #####
   private
   class Player
