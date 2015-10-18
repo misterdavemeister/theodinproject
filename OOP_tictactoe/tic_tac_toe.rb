@@ -16,8 +16,33 @@ class Game
   
   ### FACTORY METHODS ###
   def self.start
-    game = self.heads_or_tails
+    answer = self.ai_or_2player
+    game = self.heads_or_tails if answer == 1 #1 player, play with AI
+    game = Game.new(nil, 1, 2)
     game unless game.nil?
+  end
+  
+  def self.ai_or_2player
+    approved = false
+    while !approved
+      Game.clear
+      approved = true
+      puts "1 player or 2 players?"
+      puts "1. 1 player"
+      puts "2. 2 player"
+      puts
+      print "selection (1 or 2): "
+      selection = gets.chomp[0]
+      if selection.nil?
+        approved = false
+      elsif selection == '1'
+        1
+      elsif selection == '2'
+        2
+      else
+        approved = false
+      end
+    end
   end
   
   def self.heads_or_tails
@@ -59,10 +84,11 @@ class Game
   ### instance methods and variables ###
   attr_accessor :board, :ai, :player
   
-  def initialize(ai, player)
+  def initialize(ai, player, player2=nil)
     @board = ["", "", "", "", "", "", "", "", ""]
-    @ai = Player.new(ai)
+    @ai = Player.new(ai) unless ai == nil
     @player = Player.new(player)
+    @player2 = Player.new(player2) unless player2 == nil
   end
   
   def play_round
