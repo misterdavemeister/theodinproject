@@ -1,9 +1,15 @@
 class Game
   ##### CLASS METHODS AND VARIABLES #####
   @@game_over = false
+  @@one_player = false
+  @@two_player = false
   
   def self.clear
      print "\e[H\e[2J"
+  end
+  
+  def self.one_player?
+    @@one_player
   end
   
   def self.game_over? 
@@ -17,8 +23,15 @@ class Game
   ### FACTORY METHODS ###
   def self.start
     answer = self.ai_or_2player
-    game = self.heads_or_tails if answer == 1 #1 player, play with AI
-    game = Game.new(nil, 1, 2)
+    if answer == 1 #1 player, play with AI
+      game = self.heads_or_tails 
+      @@one_player = true
+    elsif answer == 2
+      game = Game.new(nil, 1, 2)
+      @@two_player = true 
+    elsif answer == 3
+      @@game_over = true
+    end
     game unless game.nil?
   end
   
@@ -30,19 +43,23 @@ class Game
       puts "1 player or 2 players?"
       puts "1. 1 player"
       puts "2. 2 player"
+      puts "3. Quit"
       puts
       print "selection (1 or 2): "
       selection = gets.chomp[0]
       if selection.nil?
         approved = false
       elsif selection == '1'
-        1
+        selection = 1
       elsif selection == '2'
-        2
+        selection = 2
+      elsif selection.match(/3|q|Q/)
+        selection = 3
       else
         approved = false
       end
     end
+    selection
   end
   
   def self.heads_or_tails
@@ -101,13 +118,36 @@ class Game
         display_game_over
         break
       end
-      if self.player.turn == turn
-        puts "Your turn, playing as \"#{self.player.piece}\"s\n\n"
-        display_board
-        selection = display_menu
-        return if Game.game_over? 
-        play(selection)
-        Game.clear
+      if @player.turn == turn
+        approved = false
+        while !approved
+          approved = true
+          puts "Your turn, playing as \"#{@player.piece}\"s\n\n" if @@one_player
+          puts "Player 1's turn, playing as \"#{@player.piece}\"s\n\n" if @@two_player
+          display_board
+          selection = display_menu
+          return if Game.game_over? 
+          if play(selection, @player.piece) == false
+            approved = false
+          else 
+            Game.clear
+          end
+        end
+      elsif !@player2.nil? && @player2.turn == turn
+        approved = false
+        while !approved
+          approved = true
+          puts "Your turn, playing as \"#{@player2.piece}\"s\n\n" if @@one_player
+          puts "Player 2's turn, playing as \"#{@player2.piece}\"s\n\n" if @@two_player
+          display_board
+          selection = display_menu
+          return if Game.game_over? 
+          if play(selection, @player2.piece) == false
+            approved = false
+          else 
+            Game.clear
+          end
+        end
       else
         puts "Computer played as \"#{self.ai.piece}\"s\n\n"
         ai_play
@@ -130,18 +170,14 @@ class Game
     end
   end
   
-  def play(selection)
-    approved = false
-    while !approved  
-      if @board[selection-1].empty?
-        @board[selection - 1] = @player.piece
-        approved = true
-      else
-        Game.clear
-        puts "This position has already been used. Please pick another.\n\n"
-        display_board
-        selection = display_menu
-      end
+  def play(selection, piece)
+    if @board[selection-1].empty?
+      @board[selection - 1] = piece
+      return true
+    else
+      Game.clear
+      puts "This position has already been used. Please pick another."
+      return false
     end
   end
   
@@ -229,8 +265,13 @@ class Game
   def display_winner
     Game.clear
     winning_piece = winner?(true)
-    winner = self.player.piece == winning_piece ? "You win!" : "The computer wins!"
-    print "#{winner}"
+    if @@one_player 
+      winner = @player.piece == winning_piece ? "You" : "The computer"
+    else
+      winner = @player.piece == winning_piece ? "Player 1" : "Player 2"
+    end
+    display_board
+    print "#{winner} won!"
     gets
     Game.game_over = true
   end
@@ -260,7 +301,7 @@ end
 game = Game.start
 Game.clear 
 if !Game.game_over?
-  puts game.player.turn == 1 ? "You won the coin toss! You have first turn." : "You lost the coin toss! You have second turn."
+  puts game.player.turn == 1 ? "You won the coin toss! You have first turn." : "You lost the coin toss! You have second turn." if Game.one_player?
 else
   print "Goodbye!"
 end
