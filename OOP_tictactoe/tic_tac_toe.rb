@@ -32,7 +32,9 @@ class Game
       puts
       print "selection: "
       selection = gets.chomp[0]
-      if selection.match(/1|h|H/)
+      if selection.nil? 
+        approved = false
+      elsif selection.match(/1|h|H/)
         game = Game.coin(1)
       elsif selection.match(/2|t|T/)
         game = Game.coin(2)
@@ -65,22 +67,59 @@ class Game
   
   def play_round
     (1..2).each do |turn|
+      if winner? 
+        display_winner 
+        break
+      end
+      if no_moves_remaining?
+        display_game_over
+        break
+      end
       if self.player.turn == turn
         puts "Your turn, playing as \"#{self.player.piece}\"s\n\n"
         display_board
-        display_menu
+        selection = display_menu
         return if Game.game_over? 
+        play(selection)
         Game.clear
       else
         puts "Computer played as \"#{self.ai.piece}\"s\n\n"
+        ai_play
         display_board
         print "(press enter)"
         gets
+        Game.clear
       end
     end
   end
   
-  def winner?
+  def ai_play
+    approved = false
+    while !approved
+      selection = rand(9)
+      if @board[selection].empty?
+        approved = true
+        @board[selection] = self.ai.piece
+      end
+    end
+  end
+  
+  def play(selection)
+    approved = false
+    while !approved  
+      if @board[selection-1].empty?
+        @board[selection - 1] = @player.piece
+        approved = true
+      else
+        Game.clear
+        puts "This position has already been used. Please pick another.\n\n"
+        display_board
+        selection = display_menu
+      end
+    end
+  end
+  
+  def winner?(ret_message=false)
     b1 = @board.slice(0, 3)
     b2 = @board.slice(3, 3)
     b3 = @board.slice(6, 3)
@@ -92,7 +131,7 @@ class Game
         b1[2] + b2[2] + b3[2] == "xxx" ||
         b2[0] + b2[1] + b2[2] == "xxx" ||
         b3[0] + b3[1] + b3[2] == "xxx"
-      return [true, "The computer wins!"]
+      message = [true, "x"]
     elsif 
       b1[0] + b1[1] + b1[2] == "ooo" ||
       b1[0] + b2[0] + b3[0] == "ooo" ||
@@ -102,11 +141,20 @@ class Game
       b1[2] + b2[2] + b3[2] == "ooo" ||
       b2[0] + b2[1] + b2[2] == "ooo" ||
       b3[0] + b3[1] + b3[2] == "ooo" 
-      return [true, "You win!"]
+      message = [true, "o"]
     else 
-      return [false]
+      message = [false]
     end #if
+    ret_message ? message[1] : message[0]
   end #winner?
+  
+  def no_moves_remaining?
+    empty = 0
+    @board.each do |t|
+      empty += 1 if t.empty?
+    end
+    empty > 0 ? false : true
+  end
   
   ##### VIEW ##### 
   def display_board
@@ -130,14 +178,14 @@ class Game
     while !approved 
       if message
          Game.clear
-         puts "Selection must be a number 1 - 9 (q/Q to quit)" 
+         puts "Selection must be a number 1 - 9 (q/Q to quit)\n\n" 
          display_board
       end
-      approved = true
+      approved, message = true, false
       puts "Choose where to put your piece"
-      print "7. Top Left    | 8.  Top Middle   | 9. Top Right \n"
+      print "1. Top Left    | 2.  Top Middle   | 3. Top Right \n"
       print "4. Middle Left | 5.    Center     | 6. Middle Right \n"
-      print "1. Bottom Left | 2. Bottom Middle | 3. Bottom Right\n"
+      print "7. Bottom Left | 8. Bottom Middle | 9. Bottom Right\n"
       puts
       print "Selection: "
       selection = gets.chomp[0]
@@ -145,9 +193,27 @@ class Game
         Game.game_over = true
         return
       end
-      approved = false if !selection.match(/[1-9]/) and message = true
+      if selection.nil? || !selection.match(/[1-9]/) 
+        approved, message = false, true
+      end
     end
-    
+    selection.to_i
+  end
+  
+  def display_winner
+    Game.clear
+    winning_piece = winner?(true)
+    winner = self.player.piece == winning_piece ? "You win!" : "The computer wins!"
+    print "#{winner}"
+    gets
+    Game.game_over = true
+  end
+  
+  def display_game_over
+    Game.clear
+    print "No more moves! It's a tie!"
+    gets
+    Game.game_over = true
   end
   
   ##### PLAYER SUBCLASS #####
