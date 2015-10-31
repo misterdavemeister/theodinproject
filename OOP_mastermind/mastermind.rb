@@ -124,8 +124,7 @@ class Game
     title = Line.new([["MASTERMIND BY DAVID COLE", :green]], :head)
     guesses = Line.new([["Guesses left: #{@guess_num}", :green]], :head)
     line = Array.new
-    num_of_lines.times { |n| line[n] = Line.new([["-", :white], ["-", :white], ["-", :white], ["-", :white]], :line) }
-
+    num_of_lines.times { |n| line << Line.new([["-", :white], ["-", :white], ["-", :white], ["-", :white]], :line) }
     board_arr = [space, title, guesses, space]
     line.each { |l| board_arr << l << space }
     board_arr
@@ -139,7 +138,7 @@ class Game
     board_key = 3 # add three to "1" to get to line 4 in @board which is line1
     board_key += (line_num - 1) if line_num > 1 # compensate for the space in between each line
     line = @board[line_num + board_key]
-    
+
     line.change {yield(line)}
   end
 
@@ -153,69 +152,6 @@ end
 puts `clear`
 game    = Game.new(12)
 game.display_board
-game.change_board(8) { |line| line.state = :incorrect }
-game.display_board
-
-=begin
-space   = Line.new
-title   = Line.new([["MASTERMIND BY DAVID COLE", :green]], :head)
-guesses = Line.new([["Guesses left: #{game.guess_num}", :green]], :head)
-
-line1   = Line.new([["-", :white], ["-", :white], ["-", :white], ["-", :white]], :line)
-line2   = Line.new([["-", :white], ["-", :white], ["-", :white], ["-", :white]], :line)
-line3   = Line.new([["-", :white], ["-", :white], ["-", :white], ["-", :white]], :line)
-line4   = Line.new([["-", :white], ["-", :white], ["-", :white], ["-", :white]], :line)
-line5   = Line.new([["-", :white], ["-", :white], ["-", :white], ["-", :white]], :line)
-line6   = Line.new([["-", :white], ["-", :white], ["-", :white], ["-", :white]], :line)
-line7   = Line.new([["-", :white], ["-", :white], ["-", :white], ["-", :white]], :line)
-line8   = Line.new([["-", :white], ["-", :white], ["-", :white], ["-", :white]], :line)
-line9   = Line.new([["-", :white], ["-", :white], ["-", :white], ["-", :white]], :line)
-line10  = Line.new([["-", :white], ["-", :white], ["-", :white], ["-", :white]], :line)
-line11  = Line.new([["-", :white], ["-", :white], ["-", :white], ["-", :white]], :line)
-line12  = Line.new([["-", :white], ["-", :white], ["-", :white], ["-", :white]], :line)
-
-#start BOARD #####
-lines = [space, title, guesses, space, line1, space, line2, space, line3, space, line4, space, line5, space, line6, space, line7, space, line8, space, line9, space, line10, space, line11, space, line12, space]
-lines.each { |line| line.display }
-line1.change { |line| line.state = :incorrect }
-line2.change { |line| line.state = :current }
-str = gets.chomp
-puts `clear`
-lines.each { |line| line.display }
-p str unless str.empty?
-
-space.display
-title.display
-
-guesses.display
-space.display
-
-line1.display
-space.display
-
-line2.display
-space.display
-
-line3.display
-space.display
-
-
-#end BOARD #####
-
-
 puts
-space.display
-title.display
-
-guesses.display
-space.display
-
-line1.display
-space.display
-
-line2.display
-space.display
-
-line3.display
-space.display
-=end
+game.change_board(1) { |line| line.state = :incorrect }
+game.display_board
