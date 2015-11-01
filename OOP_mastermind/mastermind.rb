@@ -67,9 +67,10 @@ class Line
   WIDTH = 80
   BACKGROUND = "\e[48;5;94m"
   RESET = "\e[0m"
-  COLORS = {:blue => "\e[34m", :green => "\e[32m", :gray => "\e[90m", :purple => "\e[35m", :black => "\e[30m",
-            :yellow => "\e[33m", :white => "\e[97m", :current => "\e[32m> ", :incorrect => "\e[91mx ", :correct => "\e[32m✓ ",
-            :almost => "\e[33m? ", :line => "\e[30m  ", :head_menu => "\e[32m  ", :commit_guess => "\e[97m  "}
+  COLORS = {:blue => "\e[34m", :green => "\e[32m", :gray => "\e[90m", :purple => "\e[35m",
+            :black => "\e[30m", :yellow => "\e[33m", :white => "\e[97m", :current => "\e[32m> ",
+            :incorrect => "\e[91mx ", :correct => "\e[32m✓ ", :almost => "\e[33m? ", :line => "\e[30m  ",
+            :head_menu => "\e[32m  ", :commit_guess => "\e[97m  "}
 
   def build_line(l)
     @changed = false
