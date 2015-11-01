@@ -56,7 +56,7 @@ class Line
   WIDTH = 80
   BACKGROUND = "\e[48;5;94m"
   RESET = "\e[0m"
-  COLORS = {:blue => "\e[34m", :green => "\e[32m", :gray => "\e[90m", :purple => "\e[35m", :black => "\e[30m", :yellow => "\e[33m", :white => "\e[97m", :current => "\e[32m> ", :incorrect => "\e[91mX ", :correct => "\e[32m✓ ", :almost => "\e[33m? ", :line => "\e[30m  ", :head => "\e[32m  "}
+  COLORS = {:blue => "\e[34m", :green => "\e[32m", :gray => "\e[90m", :purple => "\e[35m", :black => "\e[30m", :yellow => "\e[33m", :white => "\e[97m", :current => "\e[32m> ", :incorrect => "\e[91mx ", :correct => "\e[32m✓ ", :almost => "\e[33m? ", :line => "\e[30m  ", :head_menu => "\e[32m  ", :commit_guess => "\e[97m  "}
 
   def build_line(l)
     @changed = false
@@ -79,11 +79,8 @@ class Line
     if @state == :line
       23.times { line_result << " " }
       line_count += 23
-    elsif @state != :head && !@state.nil?
-      if @results.nil?
-        @results = Game.get_results(l)
-      end
-
+    elsif @state != :head_menu && !@state.nil?
+      @results = Game.get_results(l) if @state == :commit_guess
       line_result << "| Results: #{COLORS[@results[0]]} #{COLORS[@results[1]]} #{COLORS[@results[2]]} #{COLORS[@results[3]]} "
       line_count += 23
     end
@@ -109,25 +106,31 @@ class Game
       #  how many colors are right but in wrong position
       #  how many colors are wrong
     end
-    return [:line, :line, :line, :line]
+    #return [:line, :line, :line, :line]
+    return [:correct, :almost, :incorrect, :incorrect]
   end
 
   # INSTANCE METHODS AND VARIABLES #
   attr_reader :guess_num
 
   def initialize(guess_num)
-    @guess_num = guess_num
-    @board = make_board(@guess_num)
+    @initial_guess_num = guess_num #constant
+    @guess_num = guess_num #changed throughout game to keep track of progress
+    @board = make_board(@initial_guess_num)
   end
 
   def make_board(num_of_lines)
     space = Line.new
-    title = Line.new([["MASTERMIND BY DAVID COLE", :green]], :head)
-    guesses = Line.new([["Guesses left: #{@guess_num}", :green]], :head)
+    title = Line.new([["MASTERMIND BY DAVID COLE", :green]], :head_menu)
+    guesses = Line.new([["Guesses left: #{@guess_num}", :green]], :head_menu)
+    menu = Line.new([["MENU:", :white], ["1", :blue], ["2", :green], ["3", :gray], ["4", :purple], ["5", :black], ["6", :yellow]], :head_menu)
+
     line = Array.new
+
     num_of_lines.times { |n| line << Line.new([["-", :white], ["-", :white], ["-", :white], ["-", :white]], :line) }
     board_arr = [space, title, guesses, space]
     line.each { |l| board_arr << l << space }
+    board_arr << menu << space
     board_arr
   end
 
@@ -144,6 +147,7 @@ class Game
   end
 
   def guess
+    change_board(((@initial_guess_num - @guess_num) + 1)) { |line| line.state = :commit_guess }
     @guess_num -= 1
   end
 
@@ -152,5 +156,8 @@ end
 
 puts `clear`
 game    = Game.new(12)
-game.change_board(1) { |line| line.state = :current }
+game.change_board(1) { |line| line.state = :current } # should be private method handled by game engine
+game.display_board
+gets
+game.guess
 game.display_board
