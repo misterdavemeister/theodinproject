@@ -147,6 +147,13 @@ class Game
     @board = make_board(@initial_guess_num)
   end
 
+  def current_line
+    #to automatically pick the line to edit based on turns played =>
+    #FIRST TURN: (@initial_guess_num - @guess_num) +1 => (12 - 12) + 1 => (0) + 1
+    #TENTH TURN: (@initial_guess_num - @guess_num) +1 => (12 - 3) + 1 => (9) + 1
+    (@initial_guess_num - @guess_num) + 1
+  end
+
   def make_board(num_of_lines)
     space = Line.new
     title = Line.new([["MASTERMIND BY DAVID COLE", :green]], :head_menu)
@@ -162,10 +169,20 @@ class Game
     board_arr
   end
 
-  def display_board()
+  def start_round
+    change_board(current_line) { |line| line.state = :current}
+  end
+
+  def display_board
     @board.each { |line| line.display }
   end
 
+  def guess
+    change_board(current_line) { |line| line.state = :commit_guess }
+    @guess_num -= 1
+  end
+
+  private
   def change_board(line_num)
     board_key = 3 # add three to "1" to get to line 4 in @board which is line1
     board_key += (line_num - 1) # compensate for the space in between each line
@@ -173,22 +190,14 @@ class Game
 
     line.change {yield(line)}
   end
-
-  def guess
-    #to automatically pick the line to edit based on turns played =>
-    #FIRST TURN: (@initial_guess_num - @guess_num) +1 => (12 - 12) + 1 => (0) + 1
-    #TENTH TURN: (@initial_guess_num - @guess_num) +1 => (12 - 3) + 1 => (9) + 1
-    change_board(((@initial_guess_num - @guess_num) + 1)) { |line| line.state = :commit_guess }
-    @guess_num -= 1
-  end
-
 end
 
 
 puts `clear`
 game    = Game.new(12)
-game.change_board(1) { |line| line.state = :current } # change_board should be private method handled by game engine, used here for testing
+game.start_round
 game.display_board
 gets
 game.guess
+game.start_round
 game.display_board
