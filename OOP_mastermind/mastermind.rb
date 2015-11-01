@@ -68,8 +68,9 @@ class Line
       line_count += 2
     end
     l.each do |line, color|
-        line_result << BACKGROUND << COLORS[color] << line << "      "
-        line_count += line.length + 6
+      line_result << BACKGROUND << "   "
+      line_result << COLORS[color] << line << "   "
+      line_count += line.length + 6
     end
     line_result << RESET
     line_result << BACKGROUND
@@ -136,7 +137,7 @@ class Game
 
   def change_board(line_num)
     board_key = 3 # add three to "1" to get to line 4 in @board which is line1
-    board_key += (line_num - 1) if line_num > 1 # compensate for the space in between each line
+    board_key += (line_num - 1) # compensate for the space in between each line
     line = @board[line_num + board_key]
 
     line.change {yield(line)}
@@ -151,7 +152,5 @@ end
 
 puts `clear`
 game    = Game.new(12)
-game.display_board
-puts
-game.change_board(1) { |line| line.state = :incorrect }
+game.change_board(1) { |line| line.state = :current }
 game.display_board
