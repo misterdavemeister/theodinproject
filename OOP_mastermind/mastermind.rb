@@ -1,3 +1,14 @@
+##### LINE CLASS #####
+=begin
+  This class is used
+  to make objects that
+  represent every line
+  in the game board.
+  Every line is its
+  own Line instance.
+=end
+##### LINE CLASS #####
+
 class Line
 
   def initialize(line=nil, state=nil)
@@ -56,7 +67,9 @@ class Line
   WIDTH = 80
   BACKGROUND = "\e[48;5;94m"
   RESET = "\e[0m"
-  COLORS = {:blue => "\e[34m", :green => "\e[32m", :gray => "\e[90m", :purple => "\e[35m", :black => "\e[30m", :yellow => "\e[33m", :white => "\e[97m", :current => "\e[32m> ", :incorrect => "\e[91mx ", :correct => "\e[32m✓ ", :almost => "\e[33m? ", :line => "\e[30m  ", :head_menu => "\e[32m  ", :commit_guess => "\e[97m  "}
+  COLORS = {:blue => "\e[34m", :green => "\e[32m", :gray => "\e[90m", :purple => "\e[35m", :black => "\e[30m",
+            :yellow => "\e[33m", :white => "\e[97m", :current => "\e[32m> ", :incorrect => "\e[91mx ", :correct => "\e[32m✓ ",
+            :almost => "\e[33m? ", :line => "\e[30m  ", :head_menu => "\e[32m  ", :commit_guess => "\e[97m  "}
 
   def build_line(l)
     @changed = false
@@ -95,10 +108,24 @@ class Line
   end
 end
 
+
+##### GAME CLASS #####
+=begin
+  This class is used
+  as the controller of
+  the game. There is
+  only one instance of
+  this class. This is
+  the engine that controls
+  the view.
+=end
+##### GAME CLASS #####
+
 class Game
   # CLASS METHODS AND VARIABLES #
   def self.get_results(line)
-    priority = {:correct => 3, :almost => 2, :incorrect => 1}
+    #none of this is ready yet
+    priority = {:correct => 3, :almost => 2, :incorrect => 1} #not sure about doing it like this
     retArr = Array.new
     line.each do |line, color|
       #TODO:
@@ -147,6 +174,9 @@ class Game
   end
 
   def guess
+    #to automatically pick the line to edit based on turns played =>
+    #FIRST TURN: (@initial_guess_num - @guess_num) +1 => (12 - 12) + 1 => (0) + 1
+    #TENTH TURN: (@initial_guess_num - @guess_num) +1 => (12 - 3) + 1 => (9) + 1
     change_board(((@initial_guess_num - @guess_num) + 1)) { |line| line.state = :commit_guess }
     @guess_num -= 1
   end
@@ -156,7 +186,7 @@ end
 
 puts `clear`
 game    = Game.new(12)
-game.change_board(1) { |line| line.state = :current } # should be private method handled by game engine
+game.change_board(1) { |line| line.state = :current } # change_board should be private method handled by game engine, used here for testing
 game.display_board
 gets
 game.guess
