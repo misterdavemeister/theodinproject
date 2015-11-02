@@ -13,9 +13,10 @@ class Line
 
   def initialize(line=nil, state=nil)
     @state = state
-    @results = Array.new
+    @guess = Array.new # used to keep track of order of colors in the guess when @state is :commit_guess
+    @results = Array.new # used to keep track of results of checking guess against the computer's generated code
     4.times { @results << :line }
-    @changed = true
+    @changed = true #used to keep track of changes made to the line, if any changes are made the line must be rebuilt. otherwise the line is simply rebuilt
 
     if line.nil?
       @line = [["", :white]]
@@ -76,6 +77,7 @@ class Line
     @changed = false
     line_result = String.new
     line_count = 0
+    spot_count = 0
     unless @state.nil?
       line_result << BACKGROUND
       line_result << COLORS[@state] << RESET
@@ -85,6 +87,11 @@ class Line
       line_result << BACKGROUND << "   "
       line_result << COLORS[color] << line << "   "
       line_count += line.length + 6
+      if @state == :commit_guess
+        #answer and the order of colors added to @guess
+        spot_count += 1
+        @guess << { color => spot_count}
+      end
     end
     line_result << RESET
     line_result << BACKGROUND
@@ -105,6 +112,7 @@ class Line
     line_result.insert(0, BACKGROUND)
     (WIDTH - line_count - spaces).times { line_result << " "}
     line_result << RESET << "\n"
+    puts @guess
     @line_result = line_result
   end
 end
