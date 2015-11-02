@@ -112,7 +112,6 @@ class Line
     line_result.insert(0, BACKGROUND)
     (WIDTH - line_count - spaces).times { line_result << " "}
     line_result << RESET << "\n"
-    puts @guess
     @line_result = line_result
   end
 end
