@@ -33,11 +33,11 @@ class Line
       raise "No block was given to the change method"
     end
     @changing = false
+    @changed = true
   end
 
   def state=(state)
     raise "No changes allowed without passing block to change method" if !@changing
-    @changed = true
     @state = state
   end
 
@@ -51,6 +51,14 @@ class Line
     else
       read
     end
+  end
+
+  def add(position, color)
+    @line[position] = ["@", color]
+  end
+
+  def delete(position)
+    @line[position] = ["-", :white]
   end
 
   private
@@ -73,7 +81,7 @@ class Line
             :incorrect => "\e[91mX ", :correct => "\e[32m✓ ", :almost => "\e[33m? ", :line => "\e[30m  ",
             :head_menu => "\e[32m  ", :commit_guess => "\e[97m  "}
 
-  def build_line(l)
+  def build_line(line_arr)
     @changed = false
     line_result = String.new
     line_count = 0
@@ -83,25 +91,25 @@ class Line
       line_result << COLORS[@state] << RESET
       line_count += 2
     end
-    l.each do |line, color|
-      line_result << BACKGROUND << "   "
+    line_arr.each do |line, color|
+      line_result << BACKGROUND << "  "
       line_result << COLORS[color] << line << "   "
-      line_count += line.length + 6
+      line_count += line.length + 5
       if @state == :commit_guess
         #answer and the order of colors added to @guess
-        spot_count += 1
         @guess << { color => spot_count}
+        spot_count += 1
       end
     end
     line_result << RESET
     line_result << BACKGROUND
 
-    # results #
+    # results # =>
     if @state == :line
       23.times { line_result << " " }
       line_count += 23
     elsif @state != :head_menu && !@state.nil?
-      @results = Game.get_results(l) if @state == :commit_guess
+      @results = Game.get_results(line_arr) if @state == :commit_guess
       line_result << "| Results: #{COLORS[@results[0]]} #{COLORS[@results[1]]} #{COLORS[@results[2]]} #{COLORS[@results[3]]} "
       line_count += 23
     end
@@ -131,6 +139,8 @@ end
 
 class Game
   # CLASS METHODS AND VARIABLES #
+  @@colors = [:blue, :green, :gray, :purple, :black, :yellow]
+
   def self.get_results(line)
     #none of this is ready yet
     priority = {:correct => 3, :almost => 2, :incorrect => 1} #not sure about doing it like this
@@ -148,10 +158,17 @@ class Game
   # INSTANCE METHODS AND VARIABLES #
   attr_reader :guess_num
 
-  def initialize(guess_num)
+  def initialize(guess_num, code=nil)
+    @game_over = false
     @initial_guess_num = guess_num #constant
     @guess_num = guess_num #changed throughout game to keep track of progress
     @board = make_board(@initial_guess_num)
+    if code.nil?
+      @code = create_code
+      puts @code #TODO: ERASE!
+    else
+      @code = code
+    end
   end
 
   def current_line
@@ -165,28 +182,62 @@ class Game
     space = Line.new
     title = Line.new([["MASTERMIND BY DAVID COLE", :green]], :head_menu)
     guesses = Line.new([["Guesses left: #{@guess_num}", :green]], :head_menu)
-    menu = Line.new([["MENU:", :white], ["1", :blue], ["2", :green], ["3", :gray], ["4", :purple], ["5", :black], ["6", :yellow]], :head_menu)
+    menu = Line.new([["MENU:", :white], ["1", :blue], ["2", :green], ["3", :gray], ["4", :purple], ["5", :black], ["6", :yellow], ["(d)elete", :white], ["(g)uess", :white]], :head_menu)
+    border = String.new
+    70.times { border += '_'}
+    border_line = Line.new([[border, :black]], :head_menu)
 
     line = Array.new
 
     num_of_lines.times { |n| line << Line.new([["-", :white], ["-", :white], ["-", :white], ["-", :white]], :line) }
     board_arr = [space, title, guesses, space]
     line.each { |l| board_arr << l << space }
-    board_arr << menu << space
+    board_arr << border_line << space << menu << space
     board_arr
   end
 
   def start_round
+    @guess_count_for_line = 0
+    @round_over = false
     change_board(current_line) { |line| line.state = :current}
+    while !@round_over
+      display_board
+      print "Selection: "
+      parse_input(gets.chomp)
+    end
+  end
+
+  def parse_input(input)
+    input = input.strip
+    if input == "1" || input == "2" || input == "3" || input == "4" || input == "5" || input == "6"
+      color = @@colors[input.to_i - 1]
+      add_to_line(color)
+    elsif input.match(/d|D/)
+      delete_from_line
+    elsif input.match(/g|G/)
+      if @guess_count_for_line < 4
+        puts "Each guess requires 4 colors. You have provided #{@guess_count_for_line}."
+        print "Selection: "
+        parse_input(gets.chomp)
+      else
+        guess
+        @round_over = true
+      end
+    end
   end
 
   def display_board
+     print "\e[H\e[2J"
     @board.each { |line| line.display }
   end
 
   def guess
     change_board(current_line) { |line| line.state = :commit_guess }
     @guess_num -= 1
+  end
+
+  def game_over?
+    @game_over
   end
 
   private
@@ -197,14 +248,32 @@ class Game
 
     line.change {yield(line)}
   end
+
+  def create_code
+
+    code_arr = Array.new
+    4.times { code_arr << @@colors[rand(6)] }
+    code_arr
+  end
+
+  def add_to_line(color) # needs to be private
+    if @guess_count_for_line < 4
+      change_board(current_line) { |line| line.add(@guess_count_for_line, color) }
+      @guess_count_for_line += 1
+    else
+      puts "You have already provided 4 colors. Type 'g' to commit guess, or 'd' to delete a guess"
+      print "Selection: "
+      parse_input(gets.chomp)
+    end
+  end
+
+  def delete_from_line # needs to be private
+    @guess_count_for_line -= 1
+    change_board(current_line) { |line| line.delete(@guess_count_for_line) }
+  end
 end
 
-
-puts `clear`
 game    = Game.new(12)
-game.start_round
-game.display_board
-gets
-game.guess
-game.start_round
-game.display_board
+while !game.game_over?
+  game.start_round
+end
