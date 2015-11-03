@@ -53,6 +53,10 @@ class Line
     end
   end
 
+  def modify(new_arr)
+    @line = new_arr
+  end
+
   def add(position, color)
     @line[position] = ["@", color]
   end
@@ -234,6 +238,7 @@ class Game
   def guess
     change_board(current_line) { |line| line.state = :commit_guess }
     @guess_num -= 1
+    change_guess_line
   end
 
   def game_over?
@@ -241,6 +246,12 @@ class Game
   end
 
   private
+
+  def change_guess_line
+    line = @board[2]
+    line.change { |line| line.modify([["Guesses left: #{@guess_num}", :green]]) }
+  end
+
   def change_board(line_num)
     board_key = 3 # add three to "1" to get to line 4 in @board which is line1
     board_key += (line_num - 1) # compensate for the space in between each line
@@ -250,7 +261,6 @@ class Game
   end
 
   def create_code
-
     code_arr = Array.new
     4.times { code_arr << @@colors[rand(6)] }
     code_arr
@@ -268,8 +278,14 @@ class Game
   end
 
   def delete_from_line # needs to be private
-    @guess_count_for_line -= 1
-    change_board(current_line) { |line| line.delete(@guess_count_for_line) }
+    if @guess_count_for_line > 0
+      @guess_count_for_line -= 1
+      change_board(current_line) { |line| line.delete(@guess_count_for_line) }
+    else
+      puts "Nothing to delete"
+      print "Selection: "
+      parse_input(gets.chomp)
+    end
   end
 end
 
