@@ -149,7 +149,7 @@ class Game
     retArr = Array.new
     puts "Code: #{@@code}"
     puts "line: #{line}"
-    @@tcode = @@code
+    @@tcode = @@code.clone
     puts "TCode: #{@@tcode}"
     self.check_for_correct(line).times { retArr << :correct }
     self.check_for_almost(line).times { retArr << :almost } unless @@tcode.empty?
@@ -162,7 +162,7 @@ class Game
   def self.check_for_correct(line)
     count = 0
     line.each_with_index do |color, i|
-      idx = @@tcode[i][color]
+      idx = @@tcode[i][color.to_sym] unless @@tcode[i].nil?
       if idx == i
         @@tcode.delete_at(i)
         count += 1
@@ -174,7 +174,9 @@ class Game
   def self.check_for_almost(line)
     count = 0
     line.each_with_index do |color, i|
-      if @@tcode.include?(color)
+      idx = @@tcode[i] unless @@tcode[i].nil?
+      unless idx[color].nil?
+        #color exists in @tcode
         idx = @@tcode.index(color)
         @@tcode.delete_at(idx)
         count += 1
