@@ -114,6 +114,7 @@ class Line
       line_count += 23
     elsif @state != :head_menu && !@state.nil?
       @results = Game.get_results(@guess) if @state == :commit_guess
+      @results.each {|result| puts result}
       line_result << "| Results: #{COLORS[@results[0]]} #{COLORS[@results[1]]} #{COLORS[@results[2]]} #{COLORS[@results[3]]} "
       line_count += 23
     end
@@ -144,7 +145,7 @@ end
 class Game
   # CLASS METHODS AND VARIABLES #
   @@colors = [:blue, :green, :gray, :purple, :black, :yellow]
-
+  @@game_won = false
   def self.get_results(line)
     retArr = Array.new
     puts "Code: #{@@code}"
@@ -156,15 +157,17 @@ class Game
     self.check_for_incorrect(line).times { retArr << :incorrect } unless @@tcode.empty?
     #return [:line, :line, :line, :line]
     puts retArr
-    return [:correct, :almost, :incorrect, :incorrect]
+    return retArr
   end
 
   def self.check_for_correct(line)
     count = 0
+    delete_arr = Array.new
     line.each_with_index do |color, i|
-      idx = @@tcode[i][color.to_sym] unless @@tcode[i].nil?
+      unless @@tcode[i][:deleted] == 1 then idx = @@tcode[i][color.to_sym] end
       if idx == i
-        @@tcode.delete_at(i)
+        @@tcode[i] = {:deleted => 1}
+        line[i] = nil
         count += 1
       end
     end
@@ -173,20 +176,38 @@ class Game
 
   def self.check_for_almost(line)
     count = 0
+    delete_arr = Array.new
     line.each_with_index do |color, i|
-      idx = @@tcode[i] unless @@tcode[i].nil?
-      unless idx[color].nil?
-        #color exists in @tcode
-        idx = @@tcode.index(color)
-        @@tcode.delete_at(idx)
-        count += 1
+      #unless @@tcode[i][:deleted] == 1 then idx = @@tcode[i] end
+      @@tcode.each_with_index do |hash, idx|
+        hash.each do |tcode_color, index|
+          if tcode_color == color
+            @@tcode[idx] = {:deleted => 1}
+            line[i] = nil
+            count += 1
+          end
+        end
       end
     end
     count
   end
 
   def self.check_for_incorrect(line)
-    @@tcode.length
+    count = 0
+    @@tcode.each do |hash|
+      hash.each do |color, position|
+        puts "color in check_for_incorrect is #{color}"
+        puts "##{color != :deleted}"
+        if color.to_sym != :deleted
+          count += 1
+        end
+      end
+    end
+    count
+  end
+
+  def self.toggle_win
+    @@game_won = true
   end
 
   # INSTANCE METHODS AND VARIABLES #
@@ -233,7 +254,7 @@ class Game
   def start_round
     @guess_count_for_line = 0
     @round_over = false
-    change_board(current_line) { |line| line.state = :current}
+    change_board(current_line) { |line| line.state = :current }
     while !@round_over
       display_board
       print "Selection: "
