@@ -245,6 +245,10 @@ class Game
     @game_over
   end
 
+  def game_over?
+    @game_over
+  end
+
   private
 
   def change_guess_line
