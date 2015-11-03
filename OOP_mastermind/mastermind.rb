@@ -101,7 +101,7 @@ class Line
       line_count += line.length + 5
       if @state == :commit_guess
         #answer and the order of colors added to @guess
-        @guess << { color => spot_count}
+        @guess << color
         spot_count += 1
       end
     end
@@ -113,7 +113,7 @@ class Line
       23.times { line_result << " " }
       line_count += 23
     elsif @state != :head_menu && !@state.nil?
-      @results = Game.get_results(line_arr) if @state == :commit_guess
+      @results = Game.get_results(@guess) if @state == :commit_guess
       line_result << "| Results: #{COLORS[@results[0]]} #{COLORS[@results[1]]} #{COLORS[@results[2]]} #{COLORS[@results[3]]} "
       line_count += 23
     end
@@ -146,17 +146,45 @@ class Game
   @@colors = [:blue, :green, :gray, :purple, :black, :yellow]
 
   def self.get_results(line)
-    #none of this is ready yet
-    priority = {:correct => 3, :almost => 2, :incorrect => 1} #not sure about doing it like this
     retArr = Array.new
-    line.each do |line, color|
-      #TODO:
-      #  how many colors are in exact position
-      #  how many colors are right but in wrong position
-      #  how many colors are wrong
-    end
+    puts "Code: #{@@code}"
+    puts "line: #{line}"
+    @@tcode = @@code
+    puts "TCode: #{@@tcode}"
+    self.check_for_correct(line).times { retArr << :correct }
+    self.check_for_almost(line).times { retArr << :almost } unless @@tcode.empty?
+    self.check_for_incorrect(line).times { retArr << :incorrect } unless @@tcode.empty?
     #return [:line, :line, :line, :line]
+    puts retArr
     return [:correct, :almost, :incorrect, :incorrect]
+  end
+
+  def self.check_for_correct(line)
+    count = 0
+    line.each_with_index do |color, i|
+      idx = @@tcode[i][color]
+      if idx == i
+        @@tcode.delete_at(i)
+        count += 1
+      end
+    end
+    count
+  end
+
+  def self.check_for_almost(line)
+    count = 0
+    line.each_with_index do |color, i|
+      if @@tcode.include?(color)
+        idx = @@tcode.index(color)
+        @@tcode.delete_at(idx)
+        count += 1
+      end
+    end
+    count
+  end
+
+  def self.check_for_incorrect(line)
+    @@tcode.length
   end
 
   # INSTANCE METHODS AND VARIABLES #
@@ -168,10 +196,10 @@ class Game
     @guess_num = guess_num #changed throughout game to keep track of progress
     @board = make_board(@initial_guess_num)
     if code.nil?
-      @code = create_code
-      puts @code #TODO: ERASE!
+      @@code = create_code
+      puts @@code
     else
-      @code = code
+      @@code = code
     end
   end
 
@@ -266,7 +294,7 @@ class Game
 
   def create_code
     code_arr = Array.new
-    4.times { code_arr << @@colors[rand(6)] }
+    4.times { |n| code_arr << { @@colors[rand(6)] => n } }
     code_arr
   end
 
