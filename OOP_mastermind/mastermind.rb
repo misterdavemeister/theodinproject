@@ -157,9 +157,8 @@ class Game
     @@tcode = @@code.clone
     puts "TCode: #{@@tcode}"
     self.check_for_correct(line).times { retArr << :correct }
-    self.check_for_almost(line).times { retArr << :almost } unless @@tcode.empty?
-    self.check_for_incorrect(line).times { retArr << :incorrect } unless @@tcode.empty?
-    #return [:line, :line, :line, :line]
+    self.check_for_almost(line).times { retArr << :almost }
+    self.check_for_incorrect(line).times { retArr << :incorrect } 
     puts retArr
     return retArr
   end
