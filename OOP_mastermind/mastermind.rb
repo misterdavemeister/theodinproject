@@ -158,7 +158,7 @@ class Game
     puts "TCode: #{@@tcode}"
     self.check_for_correct(line).times { retArr << :correct }
     self.check_for_almost(line).times { retArr << :almost }
-    self.check_for_incorrect(line).times { retArr << :incorrect } 
+    self.check_for_incorrect(line).times { retArr << :incorrect }
     puts retArr
     return retArr
   end
@@ -294,6 +294,11 @@ class Game
         guess
         @round_over = true
       end
+    elsif input.match(/q|Q/)
+      @round_over = true
+      @game_over = true
+      print "\e[H\e[2J"
+      print "Goodbye!"
     end
   end
 
@@ -360,7 +365,7 @@ class Game
   end
 end
 
-game    = Game.new(12)
+game = Game.new(12)
 while !game.game_over?
   if !Game.game_won? && !Game.game_lost?
     game.start_round
