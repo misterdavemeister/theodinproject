@@ -114,8 +114,8 @@ class Line
       line_count += 23
     elsif @state != :head_menu && !@state.nil?
       @results = Game.get_results(@guess) if @state == :commit_guess
-      if @results.all? { |result| result == "correct" }
-        game.toggle_win
+      if @results.all? { |result| result == :correct }
+        Game.toggle_win
       end
       line_result << "| Results: #{COLORS[@results[0]]} #{COLORS[@results[1]]} #{COLORS[@results[2]]} #{COLORS[@results[3]]} "
       line_count += 23
@@ -148,6 +148,8 @@ class Game
   # CLASS METHODS AND VARIABLES #
   @@colors = [:blue, :green, :gray, :purple, :black, :yellow]
   @@game_won = false
+  @@game_lost = false
+
   def self.get_results(line)
     retArr = Array.new
     puts "Code: #{@@code}"
@@ -212,6 +214,18 @@ class Game
     @@game_won = true
   end
 
+  def self.toggle_lost
+    @@game_lost = true
+  end
+
+  def self.game_won?
+    @@game_won
+  end
+
+  def self.game_lost?
+    @@game_lost
+  end
+
   # INSTANCE METHODS AND VARIABLES #
   attr_reader :guess_num
 
@@ -259,6 +273,7 @@ class Game
     change_board(current_line) { |line| line.state = :current }
     while !@round_over
       display_board
+      break if Game.game_won?
       print "Selection: "
       parse_input(gets.chomp)
     end
@@ -298,8 +313,8 @@ class Game
     @game_over
   end
 
-  def game_over?
-    @game_over
+  def game_over=(bool)
+    @game_over = bool
   end
 
   private
@@ -348,5 +363,25 @@ end
 
 game    = Game.new(12)
 while !game.game_over?
-  game.start_round
+  if !Game.game_won? && !Game.game_lost?
+    game.start_round
+  else
+    if Game.game_won?
+      game.game_over = true
+      puts "You won with #{game.guess_num} guesses left!"
+    elsif Game.game_lost?
+      game.game_over = true
+      puts "YOU LOST!"
+    end
+  end
 end
+
+#cases where answer is wrong:
+
+#answer was 4 :almost
+#Code: [{:purple=>0}, {:blue=>1}, {:green=>2}, {:green=>3}]
+#line: [:blue, :green, :gray, :purple]
+
+#answer was 3 :almost, 1 :incorrect
+#Code: [{:gray=>0}, {:black=>1}, {:green=>2}, {:green=>3}]
+#line: [:blue, :green, :gray, :purple]
