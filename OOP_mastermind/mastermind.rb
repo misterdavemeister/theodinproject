@@ -16,7 +16,7 @@ class Line
     @guess = Array.new # used to keep track of order of colors in the guess when @state is :commit_guess
     @results = Array.new # used to keep track of results of checking guess against the computer's generated code
     4.times { @results << :line }
-    @changed = true #used to keep track of changes made to the line, if any changes are made the line must be rebuilt. otherwise the line is simply rebuilt
+    @changed = true #used to keep track of changes made to the line, if any changes are made the line must be rebuilt. otherwise the line is simply printed
 
     if line.nil?
       @line = [["", :white]]
@@ -152,14 +152,14 @@ class Game
 
   def self.get_results(line)
     retArr = Array.new
-    puts "Code: #{@@code}"
-    puts "line: #{line}"
+    #puts "Code: #{@@code}"
+    #puts "line: #{line}"
     @@tcode = @@code.clone
-    puts "TCode: #{@@tcode}"
+    #puts "TCode: #{@@tcode}"
     self.check_for_correct(line).times { retArr << :correct }
     self.check_for_almost(line).times { retArr << :almost }
     self.check_for_incorrect(line).times { retArr << :incorrect }
-    puts retArr
+    #puts retArr
     return retArr
   end
 
@@ -181,13 +181,17 @@ class Game
     count = 0
     delete_arr = Array.new
     line.each_with_index do |color, i|
+      found = false
       #unless @@tcode[i][:deleted] == 1 then idx = @@tcode[i] end
       @@tcode.each_with_index do |hash, idx|
         hash.each do |tcode_color, index|
-          if tcode_color == color
-            @@tcode[idx] = {:deleted => 1}
-            line[i] = nil
-            count += 1
+          if !found
+            if tcode_color == color
+              found = true
+              @@tcode[idx] = {:deleted => 1}
+              line[i] = nil
+              count += 1
+            end
           end
         end
       end
@@ -199,8 +203,8 @@ class Game
     count = 0
     @@tcode.each do |hash|
       hash.each do |color, position|
-        puts "color in check_for_incorrect is #{color}"
-        puts "##{color != :deleted}"
+        #puts "color in check_for_incorrect is #{color}"
+        #puts "##{color != :deleted}"
         if color.to_sym != :deleted
           count += 1
         end
@@ -235,7 +239,7 @@ class Game
     @board = make_board(@initial_guess_num)
     if code.nil?
       @@code = create_code
-      puts @@code
+      #puts @@code
     else
       @@code = code
     end
@@ -379,13 +383,3 @@ while !game.game_over?
     end
   end
 end
-
-#cases where answer is wrong:
-
-#answer was 4 :almost
-#Code: [{:purple=>0}, {:blue=>1}, {:green=>2}, {:green=>3}]
-#line: [:blue, :green, :gray, :purple]
-
-#answer was 3 :almost, 1 :incorrect
-#Code: [{:gray=>0}, {:black=>1}, {:green=>2}, {:green=>3}]
-#line: [:blue, :green, :gray, :purple]
