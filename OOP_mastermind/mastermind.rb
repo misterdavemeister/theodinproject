@@ -1,3 +1,5 @@
+#VERSION 1.0.1.0
+
 ##### LINE CLASS #####
 =begin
   This class is used
