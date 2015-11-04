@@ -114,7 +114,9 @@ class Line
       line_count += 23
     elsif @state != :head_menu && !@state.nil?
       @results = Game.get_results(@guess) if @state == :commit_guess
-      @results.each {|result| puts result}
+      if @results.all? { |result| result == "correct" }
+        game.toggle_win
+      end
       line_result << "| Results: #{COLORS[@results[0]]} #{COLORS[@results[1]]} #{COLORS[@results[2]]} #{COLORS[@results[3]]} "
       line_count += 23
     end
