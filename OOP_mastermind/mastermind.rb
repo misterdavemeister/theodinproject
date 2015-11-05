@@ -1,5 +1,12 @@
 #VERSION 1.0.1.1
 #11/04/15
+#FIXED LOSS BUGS
+#ADDED SOLUTION AT END OF GAME IF LOST
+#LOSS MESSAGE APPEARS IN PLACE OF MENU LINE
+
+#TODO: CHANGE WIN MESSAGE TO APPEAR IN PLACE OF MENU LINE
+DEBUGGING = true
+LOGGING = false
 
 ##### LINE CLASS #####
 =begin
@@ -112,13 +119,19 @@ class Line
     line_result << BACKGROUND
 
     # results # =>
+    #TODO: result checking needs to be done within Game class
+    #TODO: after that, have line printed with check mark since @state = :correct
+
     if @state == :line
       23.times { line_result << " " }
       line_count += 23
     elsif @state != :head_menu && !@state.nil?
-      @results = Game.get_results(@guess) if @state == :commit_guess
-      if @results.all? { |result| result == :correct }
-        Game.toggle_win
+      if @state == :commit_guess
+        @results = Game.get_results(@guess)
+        if @results.all? { |result| result == :correct }
+          Game.toggle_win
+          @state = :correct
+        end
       end
       line_result << "| Results: #{COLORS[@results[0]]} #{COLORS[@results[1]]} #{COLORS[@results[2]]} #{COLORS[@results[3]]} "
       line_count += 23
@@ -155,14 +168,14 @@ class Game
 
   def self.get_results(line)
     retArr = Array.new
-    #puts "Code: #{@@code}"
-    #puts "line: #{line}"
+    if DEBUGGING && LOGGING then puts "Code: #{@@code}" end
+    if DEBUGGING && LOGGING then puts "line: #{line}" end
     @@tcode = @@code.clone
-    #puts "TCode: #{@@tcode}"
+    if DEBUGGING && LOGGING then puts "TCode: #{@@tcode}" end
     self.check_for_correct(line).times { retArr << :correct }
     self.check_for_almost(line).times { retArr << :almost }
     self.check_for_incorrect(line).times { retArr << :incorrect }
-    #puts retArr
+    if DEBUGGING && LOGGING then puts retArr end
     return retArr
   end
 
@@ -185,7 +198,6 @@ class Game
     delete_arr = Array.new
     line.each_with_index do |color, i|
       found = false
-      #unless @@tcode[i][:deleted] == 1 then idx = @@tcode[i] end
       @@tcode.each_with_index do |hash, idx|
         hash.each do |tcode_color, index|
           if !found
@@ -206,8 +218,8 @@ class Game
     count = 0
     @@tcode.each do |hash|
       hash.each do |color, position|
-        #puts "color in check_for_incorrect is #{color}"
-        #puts "##{color != :deleted}"
+        if DEBUGGING && LOGGING then puts "color in check_for_incorrect is #{color}" end
+        if DEBUGGING && LOGGING then puts "##{color != :deleted}" end
         if color.to_sym != :deleted
           count += 1
         end
@@ -242,7 +254,7 @@ class Game
     @board = make_board(@initial_guess_num)
     if code.nil?
       @@code = create_code
-      #puts @@code
+      if DEBUGGING && LOGGING then puts @@code end
     else
       @@code = code
     end
@@ -276,8 +288,15 @@ class Game
   def start_round
     @guess_count_for_line = 0
     @round_over = false
-    change_board(current_line) { |line| line.state = :current }
+    change_board(current_line) { |line| line.state = :current unless line.state == :head_menu }
     while !@round_over
+      if guess_num == 0
+        Game.toggle_lost
+        @round_over = true
+        show_solution
+        display_board
+        break
+      end
       display_board
       break if Game.game_won?
       print "Selection: "
@@ -306,6 +325,12 @@ class Game
       @game_over = true
       print "\e[H\e[2J"
       print "Goodbye!"
+    elsif DEBUGGING
+      if input.match(/f|F/)
+        change_board(current_line) { |line| line.modify([["@", :blue], ["@", :blue], ["@", :blue], ["@", :blue]]) }
+        guess
+        @round_over = true
+      end
     end
   end
 
@@ -329,6 +354,17 @@ class Game
   end
 
   private
+  def show_solution
+    code = Array.new
+    @@code.each do |hash|
+      hash.each do |color, position|
+        puts "color is #{color} and position is #{position}"
+        code << COLORS[color] + "     @     "
+      end
+    end
+    line = @board[-2]
+    line.change { |line| line.modify([["You Lost! The solution was:  #{code.join}", :white]]) }
+  end
 
   def change_guess_line
     line = @board[2]
@@ -349,7 +385,7 @@ class Game
     code_arr
   end
 
-  def add_to_line(color) # needs to be private
+  def add_to_line(color)
     if @guess_count_for_line < 4
       change_board(current_line) { |line| line.add(@guess_count_for_line, color) }
       @guess_count_for_line += 1
@@ -360,7 +396,7 @@ class Game
     end
   end
 
-  def delete_from_line # needs to be private
+  def delete_from_line
     if @guess_count_for_line > 0
       @guess_count_for_line -= 1
       change_board(current_line) { |line| line.delete(@guess_count_for_line) }
@@ -370,6 +406,11 @@ class Game
       parse_input(gets.chomp)
     end
   end
+
+  COLORS = {:blue => "\e[34m", :green => "\e[32m", :gray => "\e[90m", :purple => "\e[35m",
+            :black => "\e[30m", :yellow => "\e[33m", :white => "\e[97m", :current => "\e[32m> ",
+            :incorrect => "\e[91mX ", :correct => "\e[32m✓ ", :almost => "\e[33m? ", :line => "\e[30m  ",
+            :head_menu => "\e[32m  ", :commit_guess => "\e[97m  "}
 end
 
 game = Game.new(12)
@@ -380,9 +421,9 @@ while !game.game_over?
     if Game.game_won?
       game.game_over = true
       puts "You won with #{game.guess_num} guesses left!"
+      #TODO: put ^^ that message in place of menu line
     elsif Game.game_lost?
       game.game_over = true
-      puts "YOU LOST!"
     end
   end
 end
