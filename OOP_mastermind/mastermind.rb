@@ -57,12 +57,25 @@ class Line
     @state
   end
 
+  def results=(results)
+    raise "No changes allowed without passing block to change method" if !@changing
+    @results = results
+  end
+
+  def results
+    @results
+  end
+
   def display
     if @changed
       create_and_read
     else
       read
     end
+  end
+
+  def line
+    @line
   end
 
   def modify(new_arr)
@@ -101,7 +114,6 @@ class Line
     @changed = false
     line_result = String.new
     line_count = 0
-    spot_count = 0
     unless @state.nil?
       line_result << BACKGROUND
       line_result << COLORS[@state] << RESET
@@ -111,11 +123,6 @@ class Line
       line_result << BACKGROUND << "  "
       line_result << COLORS[color] << line << "   "
       line_count += line.length + 5
-      if @state == :commit_guess
-        #answer and the order of colors added to @guess
-        @guess << color
-        spot_count += 1
-      end
     end
     line_result << RESET
     line_result << BACKGROUND
@@ -129,7 +136,7 @@ class Line
       line_count += 23
     elsif @state != :head_menu && !@state.nil?
       if @state == :commit_guess
-        @results = Game.get_results(@guess)
+        #TODO: does the next if conditional need to be in Game class too?
         if @results.all? { |result| result == :correct }
           Game.toggle_win
           @state = :correct
@@ -167,68 +174,6 @@ class Game
   @@colors = [:blue, :green, :gray, :purple, :black, :yellow]
   @@game_won = false
   @@game_lost = false
-
-  def self.get_results(line)
-    retArr = Array.new
-    if DEBUGGING && LOGGING then puts "Code: #{@@code}" end
-    if DEBUGGING && LOGGING then puts "line: #{line}" end
-    @@tcode = @@code.clone
-    if DEBUGGING && LOGGING then puts "TCode: #{@@tcode}" end
-    self.check_for_correct(line).times { retArr << :correct }
-    self.check_for_almost(line).times { retArr << :almost }
-    self.check_for_incorrect(line).times { retArr << :incorrect }
-    if DEBUGGING && LOGGING then puts retArr end
-    return retArr
-  end
-
-  def self.check_for_correct(line)
-    count = 0
-    delete_arr = Array.new
-    line.each_with_index do |color, i|
-      unless @@tcode[i][:deleted] == 1 then idx = @@tcode[i][color.to_sym] end
-      if idx == i
-        @@tcode[i] = {:deleted => 1}
-        line[i] = nil
-        count += 1
-      end
-    end
-    count
-  end
-
-  def self.check_for_almost(line)
-    count = 0
-    delete_arr = Array.new
-    line.each_with_index do |color, i|
-      found = false
-      @@tcode.each_with_index do |hash, idx|
-        hash.each do |tcode_color, index|
-          if !found
-            if tcode_color == color
-              found = true
-              @@tcode[idx] = {:deleted => 1}
-              line[i] = nil
-              count += 1
-            end
-          end
-        end
-      end
-    end
-    count
-  end
-
-  def self.check_for_incorrect(line)
-    count = 0
-    @@tcode.each do |hash|
-      hash.each do |color, position|
-        if DEBUGGING && LOGGING then puts "color in check_for_incorrect is #{color}" end
-        if DEBUGGING && LOGGING then puts "##{color != :deleted}" end
-        if color.to_sym != :deleted
-          count += 1
-        end
-      end
-    end
-    count
-  end
 
   def self.toggle_win
     @@game_won = true
@@ -342,7 +287,10 @@ class Game
   end
 
   def guess
-    change_board(current_line) { |line| line.state = :commit_guess }
+    change_board(current_line) do |line|
+      line.state = :commit_guess
+      line.results = get_results(line)
+     end
     @guess_num -= 1
     change_guess_line
   end
@@ -356,6 +304,78 @@ class Game
   end
 
   private
+  def parse_results(line_obj)
+    retArr = Array.new
+    line_obj.line.each do |line, color|
+      retArr << color
+    end
+    retArr
+  end
+
+  def get_results(line)
+    results = parse_results(line)
+    retArr = Array.new
+    if DEBUGGING && LOGGING then puts "Code: #{@@code}" end
+    if DEBUGGING && LOGGING then puts "line: #{line}" end
+    if DEBUGGING && LOGGING then puts "results: #{results}" end
+    @@tcode = @@code.clone
+    if DEBUGGING && LOGGING then puts "TCode: #{@@tcode}" end
+    check_for_correct(results).times { retArr << :correct }
+    check_for_almost(results).times { retArr << :almost }
+    check_for_incorrect(results).times { retArr << :incorrect }
+    if DEBUGGING && LOGGING then puts retArr end
+    return retArr
+  end
+
+  def check_for_correct(line)
+    count = 0
+    delete_arr = Array.new
+    line.each_with_index do |color, i|
+      unless @@tcode[i][:deleted] == 1 then idx = @@tcode[i][color.to_sym] end
+      if idx == i
+        @@tcode[i] = {:deleted => 1}
+        line[i] = nil
+        count += 1
+      end
+    end
+    count
+  end
+
+  def check_for_almost(line)
+    count = 0
+    delete_arr = Array.new
+    line.each_with_index do |color, i|
+      found = false
+      @@tcode.each_with_index do |hash, idx|
+        hash.each do |tcode_color, index|
+          if !found
+            if tcode_color == color
+              found = true
+              @@tcode[idx] = {:deleted => 1}
+              line[i] = nil
+              count += 1
+            end
+          end
+        end
+      end
+    end
+    count
+  end
+
+  def check_for_incorrect(line)
+    count = 0
+    @@tcode.each do |hash|
+      hash.each do |color, position|
+        if DEBUGGING && LOGGING then puts "color in check_for_incorrect is #{color}" end
+        if DEBUGGING && LOGGING then puts "##{color != :deleted}" end
+        if color.to_sym != :deleted
+          count += 1
+        end
+      end
+    end
+    count
+  end
+
   def show_solution
     code = Array.new
     @@code.each do |hash|
