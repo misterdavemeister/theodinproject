@@ -1,12 +1,11 @@
 #VERSION 1.0.2.2B
 #11/06/15
-#FIXED LOSS BUGS
-#ADDED SOLUTION AT END OF GAME IF LOST
-#LOSS MESSAGE APPEARS IN PLACE OF MENU LINE
 
-#TODO: make all result-parsing be a part of the Game class
-#TODO: CHANGE WIN MESSAGE TO APPEAR IN PLACE OF MENU LINE
-DEBUGGING = true
+#created win message, replaces menu
+
+#TODO: make an AI
+
+DEBUGGING = false
 LOGGING = false
 
 
@@ -17,7 +16,8 @@ LOGGING = false
   represent every line
   in the game board.
   Every line is its
-  own Line instance.
+  own Line instance
+  (except for spaces).
 =end
 ##### LINE CLASS #####
 
@@ -105,10 +105,10 @@ class Line
   WIDTH = 80
   BACKGROUND = "\e[48;5;94m"
   RESET = "\e[0m"
-  COLORS = {:blue => "\e[34m", :green => "\e[32m", :gray => "\e[90m", :purple => "\e[35m",
+  COLORS = { :blue => "\e[34m", :green => "\e[32m", :gray => "\e[90m", :purple => "\e[35m",
             :black => "\e[30m", :yellow => "\e[33m", :white => "\e[97m", :current => "\e[32m> ",
             :incorrect => "\e[91mX ", :correct => "\e[32m✓ ", :almost => "\e[33m? ", :line => "\e[30m  ",
-            :head_menu => "\e[32m  ", :commit_guess => "\e[97m  "}
+            :head_menu => "\e[32m  ", :commit_guess => "\e[97m  " }
 
   def build_line(line_arr)
     @changed = false
@@ -127,21 +127,10 @@ class Line
     line_result << RESET
     line_result << BACKGROUND
 
-    # results # =>
-    #TODO: result checking needs to be done within Game class
-    #TODO: after that, have line printed with check mark since @state = :correct
-
     if @state == :line
       23.times { line_result << " " }
       line_count += 23
     elsif @state != :head_menu && !@state.nil?
-      if @state == :commit_guess
-        #TODO: does the next if conditional need to be in Game class too?
-        if @results.all? { |result| result == :correct }
-          Game.toggle_win
-          @state = :correct
-        end
-      end
       line_result << "| Results: #{COLORS[@results[0]]} #{COLORS[@results[1]]} #{COLORS[@results[2]]} #{COLORS[@results[3]]} "
       line_count += 23
     end
@@ -174,22 +163,6 @@ class Game
   @@colors = [:blue, :green, :gray, :purple, :black, :yellow]
   @@game_won = false
   @@game_lost = false
-
-  def self.toggle_win
-    @@game_won = true
-  end
-
-  def self.toggle_lost
-    @@game_lost = true
-  end
-
-  def self.game_won?
-    @@game_won
-  end
-
-  def self.game_lost?
-    @@game_lost
-  end
 
   # INSTANCE METHODS AND VARIABLES #
   attr_reader :guess_num
@@ -238,14 +211,13 @@ class Game
     change_board(current_line) { |line| line.state = :current unless line.state == :head_menu }
     while !@round_over
       if guess_num == 0
-        Game.toggle_lost
+        toggle_lost
         @round_over = true
         show_solution
         display_board
         break
       end
       display_board
-      break if Game.game_won?
       print "Selection: "
       parse_input(gets.chomp)
     end
@@ -290,9 +262,21 @@ class Game
     change_board(current_line) do |line|
       line.state = :commit_guess
       line.results = get_results(line)
-     end
-    @guess_num -= 1
-    change_guess_line
+      if line.results.all? { |result| result == :correct }
+        toggle_win
+        line.state = :correct
+        @guess_num -= 1
+        change_guess_line
+        change_board(current_line) { |line2| line2.state = :line } #so that the next line doesn't have an arrow before it
+      else
+        @guess_num -= 1
+        change_guess_line
+      end
+    end
+    if game_won?
+      show_victory
+      display_board
+    end
   end
 
   def game_over?
@@ -301,6 +285,14 @@ class Game
 
   def game_over=(bool)
     @game_over = bool
+  end
+
+  def game_won?
+    @@game_won
+  end
+
+  def game_lost?
+    @@game_lost
   end
 
   private
@@ -316,7 +308,7 @@ class Game
     results = parse_results(line)
     retArr = Array.new
     if DEBUGGING && LOGGING then puts "Code: #{@@code}" end
-    if DEBUGGING && LOGGING then puts "line: #{line}" end
+    if DEBUGGING && LOGGING then puts "line: #{line.line}" end
     if DEBUGGING && LOGGING then puts "results: #{results}" end
     @@tcode = @@code.clone
     if DEBUGGING && LOGGING then puts "TCode: #{@@tcode}" end
@@ -376,6 +368,14 @@ class Game
     count
   end
 
+  def toggle_win
+    @@game_won = true
+  end
+
+  def toggle_lost
+    @@game_lost = true
+  end
+
   def show_solution
     code = Array.new
     @@code.each do |hash|
@@ -386,6 +386,11 @@ class Game
     end
     line = @board[-2]
     line.change { |line| line.modify([["You Lost! The solution was:  #{code.join}", :white]]) }
+  end
+
+  def show_victory
+    line = @board[-2]
+    line.change { |line| line.modify([["You won with #{@guess_num} guesses left!", :white]]) }
   end
 
   def change_guess_line
@@ -437,14 +442,12 @@ end
 
 game = Game.new(12)
 while !game.game_over?
-  if !Game.game_won? && !Game.game_lost?
+  if !game.game_won? && !game.game_lost?
     game.start_round
   else
-    if Game.game_won?
+    if game.game_won?
       game.game_over = true
-      puts "You won with #{game.guess_num} guesses left!"
-      #TODO: put ^^ that message in place of menu line
-    elsif Game.game_lost?
+    elsif game.game_lost?
       game.game_over = true
     end
   end
