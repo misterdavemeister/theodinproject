@@ -3,6 +3,7 @@
 
 #created win message, replaces menu
 
+#TODO: refactor
 #TODO: make an AI
 
 DEBUGGING = false
