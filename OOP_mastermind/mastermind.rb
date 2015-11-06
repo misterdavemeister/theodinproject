@@ -1,7 +1,8 @@
-#VERSION 1.0.2.2B
+#VERSION 1.0.2.3
 #11/06/15
 
 #created win message, replaces menu
+#added a debug/logging filter for a "puts" when game is lost
 
 #TODO: refactor
 #TODO: make an AI
@@ -381,7 +382,7 @@ class Game
     code = Array.new
     @@code.each do |hash|
       hash.each do |color, position|
-        puts "color is #{color} and position is #{position}"
+        if DEBUGGING && LOGGING then puts "color is #{color} and position is #{position}" end
         code << COLORS[color] + "     @     "
       end
     end
