@@ -6,9 +6,18 @@
 #TODO: refactor
 #TODO: make an AI
 
+#debugging toggles
 DEBUGGING = false
 LOGGING = false
 
+#global constants
+WIDTH = 80
+BACKGROUND = "\e[48;5;94m"
+RESET = "\e[0m"
+COLORS = { :blue => "\e[34m", :green => "\e[32m", :gray => "\e[90m", :purple => "\e[35m",
+          :black => "\e[30m", :yellow => "\e[33m", :white => "\e[97m", :current => "\e[32m> ",
+          :incorrect => "\e[91mX ", :correct => "\e[32m✓ ", :almost => "\e[33m? ", :line => "\e[30m  ",
+          :head_menu => "\e[32m  ", :commit_guess => "\e[97m  " }
 
 ##### LINE CLASS #####
 =begin
@@ -102,14 +111,6 @@ class Line
   def read
     puts @line_result
   end
-
-  WIDTH = 80
-  BACKGROUND = "\e[48;5;94m"
-  RESET = "\e[0m"
-  COLORS = { :blue => "\e[34m", :green => "\e[32m", :gray => "\e[90m", :purple => "\e[35m",
-            :black => "\e[30m", :yellow => "\e[33m", :white => "\e[97m", :current => "\e[32m> ",
-            :incorrect => "\e[91mX ", :correct => "\e[32m✓ ", :almost => "\e[33m? ", :line => "\e[30m  ",
-            :head_menu => "\e[32m  ", :commit_guess => "\e[97m  " }
 
   def build_line(line_arr)
     @changed = false
@@ -381,7 +382,7 @@ class Game
     code = Array.new
     @@code.each do |hash|
       hash.each do |color, position|
-        puts "color is #{color} and position is #{position}"
+        if DEBUGGING && LOGGING then puts "color is #{color} and position is #{position}" end
         code << COLORS[color] + "     @     "
       end
     end
@@ -434,11 +435,6 @@ class Game
       parse_input(gets.chomp)
     end
   end
-
-  COLORS = {:blue => "\e[34m", :green => "\e[32m", :gray => "\e[90m", :purple => "\e[35m",
-            :black => "\e[30m", :yellow => "\e[33m", :white => "\e[97m", :current => "\e[32m> ",
-            :incorrect => "\e[91mX ", :correct => "\e[32m✓ ", :almost => "\e[33m? ", :line => "\e[30m  ",
-            :head_menu => "\e[32m  ", :commit_guess => "\e[97m  "}
 end
 
 game = Game.new(12)
