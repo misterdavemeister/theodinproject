@@ -1,4 +1,4 @@
-#VERSION 1.0.2.4
+#VERSION 1.0.2.4B
 #11/06/15
 
 #created win message, replaces menu
