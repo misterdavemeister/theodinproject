@@ -20,18 +20,6 @@ COLORS = { :blue => "\e[34m", :green => "\e[32m", :gray => "\e[90m", :purple => 
           :incorrect => "\e[91mX ", :correct => "\e[32m✓ ", :almost => "\e[33m? ", :line => "\e[30m  ",
           :head_menu => "\e[32m  ", :commit_guess => "\e[97m  " }
 
-##### LINE CLASS #####
-=begin
-  This class is used
-  to make objects that
-  represent every line
-  in the game board.
-  Every line is its
-  own Line instance
-  (except for spaces).
-=end
-##### LINE CLASS #####
-
 class Line
 
   def initialize(line=nil, state=nil)
@@ -146,19 +134,6 @@ class Line
     @line_result = line_result
   end
 end
-
-
-##### GAME CLASS #####
-=begin
-  This class is used
-  as the controller of
-  the game. There is
-  only one instance of
-  this class. This is
-  the engine that controls
-  the view.
-=end
-##### GAME CLASS #####
 
 class Game
   # CLASS METHODS AND VARIABLES #
