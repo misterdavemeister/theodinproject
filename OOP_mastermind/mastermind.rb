@@ -1,3 +1,4 @@
+TERMINAL_RESIZE = print "\e[8;33;80;t"
 WIDTH = 80
 BACKGROUND = "\e[48;5;94m"
 RESET = "\e[0m"
@@ -125,6 +126,7 @@ class Game
   attr_reader :guess_num
 
   def initialize(guess_num, code=nil)
+    TERMINAL_RESIZE
     @colors = [:blue, :green, :gray, :purple, :black, :yellow]
     @game_won = false
     @game_lost = false
