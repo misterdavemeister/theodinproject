@@ -36,7 +36,6 @@ class Line
 
   def initialize(line=nil, state=nil)
     @state = state
-    @guess = Array.new # used to keep track of order of colors in the guess when @state is :commit_guess
     @results = Array.new # used to keep track of results of checking guess against the computer's generated code
     4.times { @results << :line }
     @changed = true #used to keep track of changes made to the line, if any changes are made the line must be rebuilt. otherwise the line is simply printed
