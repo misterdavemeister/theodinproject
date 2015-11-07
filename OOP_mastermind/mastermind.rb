@@ -2,6 +2,7 @@
 #11/06/15
 
 #created win message, replaces menu
+#added a debug/logging filter for a "puts" when game is lost
 
 #TODO: refactor
 #TODO: make an AI
