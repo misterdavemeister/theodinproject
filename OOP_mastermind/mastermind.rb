@@ -1,17 +1,3 @@
-#VERSION 1.0.2.4B
-#11/06/15
-
-#created win message, replaces menu
-#added a debug/logging filter for a "puts" when game is lost
-
-#TODO: refactor
-#TODO: make an AI
-
-#debugging toggles
-DEBUGGING = false
-LOGGING = false
-
-#global constants
 WIDTH = 80
 BACKGROUND = "\e[48;5;94m"
 RESET = "\e[0m"
@@ -136,22 +122,18 @@ class Line
 end
 
 class Game
-  # CLASS METHODS AND VARIABLES #
-  @@colors = [:blue, :green, :gray, :purple, :black, :yellow]
-  @@game_won = false
-  @@game_lost = false
-
-  # INSTANCE METHODS AND VARIABLES #
   attr_reader :guess_num
 
   def initialize(guess_num, code=nil)
+    @colors = [:blue, :green, :gray, :purple, :black, :yellow]
+    @game_won = false
+    @game_lost = false
     @game_over = false
     @initial_guess_num = guess_num #constant
     @guess_num = guess_num #changed throughout game to keep track of progress
     @board = make_board(@initial_guess_num)
     if code.nil?
       @@code = create_code
-      if DEBUGGING && LOGGING then puts @@code end
     else
       @@code = code
     end
@@ -203,7 +185,7 @@ class Game
   def parse_input(input)
     input = input.strip
     if input == "1" || input == "2" || input == "3" || input == "4" || input == "5" || input == "6"
-      color = @@colors[input.to_i - 1]
+      color = @colors[input.to_i - 1]
       add_to_line(color)
     elsif input.match(/d|D/)
       delete_from_line
@@ -221,12 +203,6 @@ class Game
       @game_over = true
       print "\e[H\e[2J"
       print "Goodbye!"
-    elsif DEBUGGING
-      if input.match(/f|F/)
-        change_board(current_line) { |line| line.modify([["@", :blue], ["@", :blue], ["@", :blue], ["@", :blue]]) }
-        guess
-        @round_over = true
-      end
     end
   end
 
@@ -244,7 +220,8 @@ class Game
         line.state = :correct
         @guess_num -= 1
         change_guess_line
-        change_board(current_line) { |line2| line2.state = :line } #so that the next line doesn't have an arrow before it
+        change_board(current_line) { |line2| line2.state = :line unless line2.state == :head_menu}
+        # ^^ so that the next line doesn't have an arrow before it ^^
       else
         @guess_num -= 1
         change_guess_line
@@ -265,11 +242,11 @@ class Game
   end
 
   def game_won?
-    @@game_won
+    @game_won
   end
 
   def game_lost?
-    @@game_lost
+    @game_lost
   end
 
   private
@@ -284,15 +261,10 @@ class Game
   def get_results(line)
     results = parse_results(line)
     retArr = Array.new
-    if DEBUGGING && LOGGING then puts "Code: #{@@code}" end
-    if DEBUGGING && LOGGING then puts "line: #{line.line}" end
-    if DEBUGGING && LOGGING then puts "results: #{results}" end
     @@tcode = @@code.clone
-    if DEBUGGING && LOGGING then puts "TCode: #{@@tcode}" end
     check_for_correct(results).times { retArr << :correct }
     check_for_almost(results).times { retArr << :almost }
     check_for_incorrect(results).times { retArr << :incorrect }
-    if DEBUGGING && LOGGING then puts retArr end
     return retArr
   end
 
@@ -335,8 +307,6 @@ class Game
     count = 0
     @@tcode.each do |hash|
       hash.each do |color, position|
-        if DEBUGGING && LOGGING then puts "color in check_for_incorrect is #{color}" end
-        if DEBUGGING && LOGGING then puts "##{color != :deleted}" end
         if color.to_sym != :deleted
           count += 1
         end
@@ -346,18 +316,18 @@ class Game
   end
 
   def toggle_win
-    @@game_won = true
+    @game_won = true
   end
 
   def toggle_lost
-    @@game_lost = true
+    @game_lost = true
   end
 
   def show_solution
+    ## played last turn, lost the game ##
     code = Array.new
     @@code.each do |hash|
       hash.each do |color, position|
-        if DEBUGGING && LOGGING then puts "color is #{color} and position is #{position}" end
         code << COLORS[color] + "     @     "
       end
     end
@@ -385,7 +355,7 @@ class Game
 
   def create_code
     code_arr = Array.new
-    4.times { |n| code_arr << { @@colors[rand(6)] => n } }
+    4.times { |n| code_arr << { @colors[rand(6)] => n } }
     code_arr
   end
 
@@ -412,6 +382,7 @@ class Game
   end
 end
 
+## starting and looping the game ##
 game = Game.new(12)
 while !game.game_over?
   if !game.game_won? && !game.game_lost?
