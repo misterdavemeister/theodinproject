@@ -1,4 +1,4 @@
-TERMINAL_RESIZE = print "\e[8;33;80;t"
+TERMINAL_RESIZE = print "\e[8;34;80;t"
 WIDTH = 80
 BACKGROUND = "\e[48;5;237m"
 RESET = "\e[0m"
@@ -179,6 +179,7 @@ class Game
         break
       end
       display_board
+      puts
       print "Selection: "
       parse_input(gets.chomp)
     end
@@ -194,6 +195,7 @@ class Game
     elsif input.match(/g|G/)
       if @guess_count_for_line < 4
         puts "Each guess requires 4 colors. You have provided #{@guess_count_for_line}."
+        puts
         print "Selection: "
         parse_input(gets.chomp)
       else
@@ -367,6 +369,7 @@ class Game
       @guess_count_for_line += 1
     else
       puts "You have already provided 4 colors. Type 'g' to commit guess, or 'd' to delete a guess"
+      puts
       print "Selection: "
       parse_input(gets.chomp)
     end
@@ -378,6 +381,7 @@ class Game
       change_board(current_line) { |line| line.delete(@guess_count_for_line) }
     else
       puts "Nothing to delete"
+      puts
       print "Selection: "
       parse_input(gets.chomp)
     end
