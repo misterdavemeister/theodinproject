@@ -1,6 +1,5 @@
 TERMINAL_RESIZE = print "\e[8;33;80;t"
 WIDTH = 80
-#BACKGROUND = "\e[40;38;5;241m" -- darker but hides black
 BACKGROUND = "\e[48;5;237m"
 RESET = "\e[0m"
 COLORS = { :blue => "\e[34m", :green => "\e[32m", :gray => "\e[90m", :purple => "\e[35m",
