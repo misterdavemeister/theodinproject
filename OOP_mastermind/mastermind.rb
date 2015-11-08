@@ -7,6 +7,15 @@ COLORS = { :blue => "\e[34m", :green => "\e[32m", :gray => "\e[90m", :purple => 
           :incorrect => "\e[91mX ", :correct => "\e[32m✓ ", :almost => "\e[33m? ", :line => "\e[30m  ",
           :head_menu => "\e[32m  ", :commit_guess => "\e[97m  " }
 
+def winsize
+  require 'io/console'
+  IO.console.winsize
+  rescue LoadError
+  # This works with older Ruby, but only with systems
+  # that have a tput(1) command, such as Unix clones.
+  [Integer(`tput li`), Integer(`tput co`)]
+end
+
 class Line
 
   def initialize(line=nil, state=nil)
@@ -207,6 +216,7 @@ class Game
       @game_over = true
       print "\e[H\e[2J"
       print "Goodbye!"
+      print "\e[8;#{$rows};#{$cols};t" #for terminal reset
     end
   end
 
@@ -389,6 +399,7 @@ class Game
 end
 
 ## starting and looping the game ##
+$rows, $cols = winsize #for terminal reset at end of game
 game = Game.new(12)
 while !game.game_over?
   if !game.game_won? && !game.game_lost?
@@ -399,5 +410,6 @@ while !game.game_over?
     elsif game.game_lost?
       game.game_over = true
     end
+    print "\e[8;#{$rows};#{$cols};t" #terminal reset
   end
 end
