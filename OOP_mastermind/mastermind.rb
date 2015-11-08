@@ -411,7 +411,6 @@ while !game.game_over?
     end
   end
 end
-puts
-print "Goodbye! (press enter)"
-gets
-print "\e[8;#{$rows};#{$cols};t" #for terminal reset
+print "Thanks for playing! (press enter)"
+gets.chomp
+print "\e[8;#{$rows};#{$cols};t\e[H\e[2J" #for terminal reset and clear
