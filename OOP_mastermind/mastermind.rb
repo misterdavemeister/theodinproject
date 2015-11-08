@@ -1,3 +1,13 @@
+require 'io/console'
+def winsize
+  IO.console.winsize
+  rescue LoadError
+  # This works with older Ruby, but only with systems
+  # that have a tput(1) command, such as Unix clones.
+  [Integer(`tput li`), Integer(`tput co`)]
+end
+$rows, $cols = winsize #for terminal reset at end of game
+
 TERMINAL_RESIZE = print "\e[8;34;80;t"
 WIDTH = 80
 BACKGROUND = "\e[48;5;237m"
@@ -7,15 +17,6 @@ COLORS = { :blue => "\e[34m", :green => "\e[32m", :gray => "\e[90m", :purple => 
           :black => "\e[30m", :yellow => "\e[33m", :white => "\e[97m", :current => "\e[32m> ",
           :incorrect => "\e[91mX ", :correct => "\e[32m✓ ", :almost => "\e[33m? ", :line => "\e[30m  ",
           :head_menu => "\e[32m  ", :commit_guess => "\e[97m  " }
-
-def winsize
-  require 'io/console'
-  IO.console.winsize
-  rescue LoadError
-  # This works with older Ruby, but only with systems
-  # that have a tput(1) command, such as Unix clones.
-  [Integer(`tput li`), Integer(`tput co`)]
-end
 
 class Line
 
@@ -397,9 +398,8 @@ class Game
   end
 end
 
-## starting and looping the game ##
-$rows, $cols = winsize #for terminal reset at end of game
-game = Game.new(12)
+## starting and looping the game #
+game = Game.new(12) unless $rows.nil? || $cols.nil?
 while !game.game_over?
   if !game.game_won? && !game.game_lost?
     game.start_round
