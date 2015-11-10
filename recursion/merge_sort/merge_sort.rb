@@ -13,7 +13,6 @@ def merge_sort(arr)
 end
 
 def merge(first, second)
-  puts "merging: #{first} and #{second}"
   new_arr = []
   total = first.count + second.count
   while new_arr.count < total
