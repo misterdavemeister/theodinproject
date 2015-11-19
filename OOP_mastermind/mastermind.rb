@@ -1,4 +1,8 @@
 require 'io/console'
+GUESSES = 12 ## amount of guesses per game
+
+### TERMINAL COLORS AND SIZE ###
+
 def winsize
   IO.console.winsize
   rescue LoadError
@@ -8,8 +12,6 @@ def winsize
 end
 $rows, $cols = winsize #for terminal reset at end of game
 
-
-GUESSES = 12 ## amount of guesses per game
 HEIGHT = (GUESSES * 2) + 10 ## terminal height
 TERMINAL_RESIZE = print "\e[8;#{HEIGHT};80;t"
 WIDTH = 80
@@ -20,6 +22,8 @@ COLORS = { :blue => "\e[34m", :green => "\e[32m", :gray => "\e[90m", :purple => 
           :black => "\e[30m", :yellow => "\e[33m", :white => "\e[97m", :current => "\e[32m> ",
           :incorrect => "\e[91mX ", :correct => "\e[32m✓ ", :almost => "\e[33m? ", :line => "\e[30m  ",
           :head_menu => "\e[32m  ", :commit_guess => "\e[97m  " }
+
+### LINE CLASS ###
 
 class Line
 
@@ -136,6 +140,8 @@ class Line
   end
 end
 
+### GAME CLASS ###
+
 class Game
   attr_reader :guess_num
 
@@ -185,7 +191,7 @@ class Game
     @round_over = false
     change_board(current_line) { |line| line.state = :current unless line.state == :head_menu }
     while !@round_over
-      if guess_num == 0
+      if @guess_num == 0
         toggle_lost
         @round_over = true
         show_solution
@@ -201,7 +207,7 @@ class Game
 
   def parse_input(input)
     input = input.strip
-    if input == "1" || input == "2" || input == "3" || input == "4" || input == "5" || input == "6"
+    if ["1", "2", "3", "4", "5", "6"].any? { |n| n == input }
       color = @colors[input.to_i - 1]
       add_to_line(color)
     elsif input.match(/d|D/)
@@ -363,9 +369,9 @@ class Game
   end
 
   def change_board(line_num)
-    board_key = 3 # add three to "1" to get to line 4 in @board which is line1
+    board_key = 3 # add three to "1" to get to index 4 in @board which is line1 (two spaces, title line and "guesses left" line, then first guess line of the board)
     board_key += (line_num - 1) # compensate for the space in between each line
-    line = @board[line_num + board_key]
+    line = @board[line_num + board_key] # get the line object from @board
 
     line.change {yield(line)}
   end
