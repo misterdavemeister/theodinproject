@@ -13,8 +13,8 @@ end
 $rows, $cols = winsize #for terminal reset at end of game
 
 HEIGHT = (GUESSES * 2) + 10 ## terminal height
-TERMINAL_RESIZE = print "\e[8;#{HEIGHT};80;t"
-WIDTH = 80
+WIDTH = 73 # MINIMUM OF 73
+TERMINAL_RESIZE = print "\e[8;#{HEIGHT};#{WIDTH};t"
 BACKGROUND = "\e[48;5;237m"
 RESET = "\e[0m"
 CLEAR = print "\e[H\e[2J"
@@ -82,14 +82,17 @@ class Line
   end
 
   def modify(new_arr)
+    raise "No changes allowed without passing block to change method" if !@changing
     @line = new_arr
   end
 
   def add(position, color)
+    raise "No changes allowed without passing block to change method" if !@changing
     @line[position] = ["@", color]
   end
 
   def delete(position)
+    raise "No changes allowed without passing block to change method" if !@changing
     @line[position] = ["-", :white]
   end
 
@@ -174,7 +177,7 @@ class Game
     guesses = Line.new([["Guesses left: #{@guess_num}", :green]], :head_menu)
     menu = Line.new([["MENU:", :white], ["1", :blue], ["2", :green], ["3", :gray], ["4", :purple], ["5", :black], ["6", :yellow], ["(d)elete", :white], ["(g)uess", :white]], :head_menu)
     border = String.new
-    70.times { border += '_'}
+    (WIDTH - 10).times { border += '_'}
     border_line = Line.new([[border, :black]], :head_menu)
 
     line = Array.new
