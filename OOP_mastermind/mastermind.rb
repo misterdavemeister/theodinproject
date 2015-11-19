@@ -8,9 +8,9 @@ def winsize
 end
 $rows, $cols = winsize #for terminal reset at end of game
 
-GUESSES = 15 
-HEIGHT = (GUESSES * 2) + 10
 
+GUESSES = 12 ## amount of guesses per game
+HEIGHT = (GUESSES * 2) + 10 ## terminal height
 TERMINAL_RESIZE = print "\e[8;#{HEIGHT};80;t"
 WIDTH = 80
 BACKGROUND = "\e[48;5;237m"
