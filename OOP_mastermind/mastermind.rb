@@ -8,7 +8,10 @@ def winsize
 end
 $rows, $cols = winsize #for terminal reset at end of game
 
-TERMINAL_RESIZE = print "\e[8;34;80;t"
+GUESSES = 15 
+HEIGHT = (GUESSES * 2) + 10
+
+TERMINAL_RESIZE = print "\e[8;#{HEIGHT};80;t"
 WIDTH = 80
 BACKGROUND = "\e[48;5;237m"
 RESET = "\e[0m"
@@ -399,7 +402,7 @@ class Game
 end
 
 ## starting and looping the game #
-game = Game.new(12) unless $rows.nil? || $cols.nil?
+game = Game.new(GUESSES) unless $rows.nil? || $cols.nil?
 while !game.game_over?
   if !game.game_won? && !game.game_lost?
     game.start_round
