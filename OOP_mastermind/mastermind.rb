@@ -159,11 +159,48 @@ class Game
     @board = make_board(@initial_guess_num)
     if code.nil?
       @@code = create_code
+      puts @@code
     else
       @@code = code
     end
   end
 
+  def start_round
+    @guess_count_for_line = 0
+    @round_over = false
+    change_board(current_line) { |line| line.state = :current unless line.state == :head_menu }
+    while !@round_over
+      if @guess_num == 0
+        toggle_lost
+        @round_over = true
+        show_solution
+        display_board
+        break
+      end
+      display_board
+      puts
+      print "Selection: "
+      parse_input(gets.chomp)
+    end
+  end
+
+  def game_over?
+    @game_over
+  end
+
+  def game_over=(bool)
+    @game_over = bool
+  end
+
+  def game_won?
+    @game_won
+  end
+
+  def game_lost?
+    @game_lost
+  end
+
+  private
   def current_line
     #to automatically pick the line to edit based on turns played =>
     #FIRST TURN: (@initial_guess_num - @guess_num) +1 => (12 - 12) + 1 => (0) + 1
@@ -187,25 +224,6 @@ class Game
     line.each { |l| board_arr << l << space }
     board_arr << border_line << space << menu << space
     board_arr
-  end
-
-  def start_round
-    @guess_count_for_line = 0
-    @round_over = false
-    change_board(current_line) { |line| line.state = :current unless line.state == :head_menu }
-    while !@round_over
-      if @guess_num == 0
-        toggle_lost
-        @round_over = true
-        show_solution
-        display_board
-        break
-      end
-      display_board
-      puts
-      print "Selection: "
-      parse_input(gets.chomp)
-    end
   end
 
   def parse_input(input)
@@ -233,7 +251,7 @@ class Game
   end
 
   def display_board
-     CLEAR
+    CLEAR
     @board.each { |line| line.display }
   end
 
@@ -259,23 +277,6 @@ class Game
     end
   end
 
-  def game_over?
-    @game_over
-  end
-
-  def game_over=(bool)
-    @game_over = bool
-  end
-
-  def game_won?
-    @game_won
-  end
-
-  def game_lost?
-    @game_lost
-  end
-
-  private
   def parse_results(line_obj)
     retArr = Array.new
     line_obj.line.each do |line, color|
@@ -357,17 +358,17 @@ class Game
         code << COLORS[color] + "     @     "
       end
     end
-    line = @board[-2]
+    line = @board[-2] #menu line
     line.change { |line| line.modify([["You Lost! The solution was:  #{code.join}", :white]]) }
   end
 
   def show_victory
-    line = @board[-2]
+    line = @board[-2] #menu line
     line.change { |line| line.modify([["You won with #{@guess_num} guesses left!", :white]]) }
   end
 
   def change_guess_line
-    line = @board[2]
+    line = @board[2] #menu line
     line.change { |line| line.modify([["Guesses left: #{@guess_num}", :green]]) }
   end
 
