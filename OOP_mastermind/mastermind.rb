@@ -29,8 +29,7 @@ class Line
 
   def initialize(line=nil, state=nil)
     @state = state
-    @results = Array.new # used to keep track of results of checking guess against the computer's generated code
-    4.times { @results << :line }
+    @results = Array.new(4, :line)
     @changed = true #used to keep track of changes made to the line, if any changes are made the line must be rebuilt. otherwise the line is simply printed
 
     if line.nil?
@@ -424,6 +423,7 @@ while !game.game_over?
     end
   end
 end
+puts
 print "Thanks for playing! (press enter)"
 gets.chomp
 print "\e[8;#{$rows};#{$cols};t\e[H\e[2J" #for terminal reset and clear
